@@ -3,9 +3,12 @@ from pygame. constants import QUIT, K_DOWN, K_UP, K_LEFT, K_RIGHT
 from random import randint
 
 
-def change_color_ball():
-    color = randint(0, 255), randint(0, 255), randint(0, 255)
-    return color
+def create_bonus():
+    bonus = pygame.Surface((20, 20))
+    bonus.fill(GREEN)
+    bonus_rect = pygame.Rect(randint(0, width), 0, *bonus.get_size())
+    bonus_speed = randint(2, 5)
+    return [bonus, bonus_rect, bonus_speed]
 
 
 def create_enemy():
@@ -23,9 +26,12 @@ def main():
     ball_speed = 5
     CREATE_ENEMY = pygame.USEREVENT + 1
     pygame.time.set_timer(CREATE_ENEMY, 1500)
+    CREATE_BONUS = pygame.USEREVENT + 2
+    pygame.time.set_timer(CREATE_BONUS, 3000)
 
     is_working = True
     enemies = []
+    bonuses = []
     while is_working:
 
         FPS.tick(50)
@@ -36,6 +42,9 @@ def main():
 
             if event.type == CREATE_ENEMY:
                 enemies.append(create_enemy())
+
+            if event.type == CREATE_BONUS:
+                bonuses.append(create_bonus())
 
         pressed_keys = pygame.key.get_pressed()
 
@@ -52,6 +61,16 @@ def main():
             if ball_rect.colliderect(enemy[1]):
                 enemies.pop(enemies.index(enemy))
 
+        for bonus in bonuses:
+            bonus[1] = bonus[1].move(0, bonus[2])
+            main_surface.blit(bonus[0], bonus[1])
+
+            if bonus[1].bottom > height:
+                bonuses.pop(bonuses.index(bonus))
+
+            if ball_rect.colliderect(bonus[1]):
+                bonuses.pop(bonuses.index(bonus))
+
         if pressed_keys[K_DOWN] and not ball_rect.bottom >= height:
             ball_rect = ball_rect.move(0, ball_speed)
 
@@ -64,6 +83,7 @@ def main():
         if pressed_keys[K_RIGHT] and not ball_rect.right >= width:
             ball_rect = ball_rect.move(ball_speed, 0)
 
+        print(len(bonuses))
         pygame.display.flip()
 
 
@@ -74,6 +94,7 @@ if __name__ == '__main__':
     BLACK = 0, 0, 0
     WHITE = 255, 255, 255
     RED = 255, 0, 0
+    GREEN = 0, 255, 0
 
     main_surface = pygame.display.set_mode(screen)
     main()
